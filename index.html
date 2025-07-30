@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTrack+ AI Assistant</title>
+     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1em;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .medicine-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .medicine-input input {
+            flex: 2;
+        }
+
+        .medicine-input select {
+            flex: 1;
+        }
+
+        .medicine-input button {
+            padding: 10px 15px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            white-space: nowrap;
+        }
+
+        .add-medicine-btn {
+            background: #51cf66;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ai-response-container {
+            display: none;
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f4fd 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+            border: 1px solid #e3f2fd;
+        }
+
+        .ai-response-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4facfe;
+        }
+
+        .ai-response-header h3 {
+            color: #1976d2;
+            font-size: 1.3em;
+            margin-left: 10px;
+        }
+
+        .response-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .response-section h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+        }
+
+        .response-section h4::before {
+            content: "▶";
+            color: #4facfe;
+            margin-right: 8px;
+        }
+
+        .response-section ul {
+            margin-left: 20px;
+        }
+
+        .response-section li {
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        .youtube-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .youtube-link {
+            background: #ff0000;
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .youtube-link:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+        }
+
+        .reminder-section {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .reminder-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .btn-yes {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-yes:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-no {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-no:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+
+        .reminder-setup {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .frequency-options {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .frequency-btn {
+            padding: 10px 20px;
+            border: 2px solid #4facfe;
+            background: white;
+            color: #4facfe;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .frequency-btn.active,
+        .frequency-btn:hover {
+            background: #4facfe;
+            color: white;
+        }
+
+        .contact-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .contact-method {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .contact-method.selected {
+            border-color: #4facfe;
+            background: #f0f8ff;
+        }
+
+        .success-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .error-message {
+            display: none;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .medicine-input {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch;
+            }
+
+            .medicine-input button {
+                width: 100%;
+            }
+
+            .reminder-buttons {
+                flex-direction: column;
+            }
+
+            .frequency-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🩺 MediTrack+ AI</h1>
+            <p>Your Intelligent Health Assistant</p>
+        </div>
+
+        <div class="form-container" id="mainForm">
+            <form id="healthForm">
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Age *</label>
+                    <input type="number" id="age" name="age" required min="1" max="120" placeholder="Enter your age">
+                </div>
+
+                <div class="form-group">
+                    <label for="gender">Gender *</label>
+                    <select id="gender" name="gender" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email address">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
+                </div>
+
+                <div class="form-group">
+                    <label for="familyContact">Family Member Contact</label>
+                    <input type="text" id="familyContact" name="familyContact" placeholder="Family member's phone/email (optional)">
+                </div>
+
+                <div class="form-group">
+                    <label for="symptoms">Current Symptoms (Optional)</label>
+                    <textarea id="symptoms" name="symptoms" rows="3" placeholder="Describe any symptoms you're experiencing..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Current Medications *</label>
+                    <div id="medicinesContainer">
+                        <div class="medicine-input">
+                            <input type="text" name="medicineName[]" placeholder="Medicine name" required>
+                            <input type="text" name="dosage[]" placeholder="Dosage (e.g., 500mg)">
+                            <select name="frequency[]">
+                                <option value="">Frequency</option>
+                                <option value="Once daily">Once daily</option>
+                                <option value="Twice daily">Twice daily</option>
+                                <option value="Three times daily">Three times daily</option>
+                                <option value="As needed">As needed</option>
+                            </select>
+                            <button type="button" onclick="removeMedicine(this)">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="add-medicine-btn" onclick="addMedicine()">+ Add Another Medicine</button>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <div class="loading-spinner" id="loadingSpinner"></div>
+                    🤖 Analyze with AI
+                </button>
+            </form>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="ai-response-container" id="aiResponseContainer">
+                <div class="ai-response-header">
+                    <span style="font-size: 1.5em;">🤖</span>
+                    <h3>AI Health Analysis</h3>
+                </div>
+                <div id="aiResponseContent"></div>
+                
+                <div class="reminder-section">
+                    <h4>📱 Smart Health Reminders</h4>
+                    <p>Would you like to set up intelligent medication reminders?</p>
+                    <div class="reminder-buttons">
+                        <button class="btn btn-yes" onclick="showReminderSetup()">✅ Yes, Set Reminders</button>
+                        <button class="btn btn-no" onclick="declineReminders()">❌ No Thanks</button>
+                    </div>
+                    
+                    <div class="reminder-setup" id="reminderSetup">
+                        <h5>Choose Reminder Frequency:</h5>
+                        <div class="frequency-options">
+                            <div class="frequency-btn" data-freq="once" onclick="selectFrequency('once')">Once Daily</div>
+                            <div class="frequency-btn" data-freq="twice" onclick="selectFrequency('twice')">Twice Daily</div>
+                            <div class="frequency-btn" data-freq="thrice" onclick="selectFrequency('thrice')">Three Times</div>
+                        </div>
+                        
+                        <h5 style="margin-top: 20px;">Preferred Contact Method:</h5>
+                        <div class="contact-methods">
+                            <div class="contact-method" data-method="whatsapp" onclick="selectContactMethod('whatsapp')">
+                                📱 WhatsApp
+                            </div>
+                            <div class="contact-method" data-method="sms" onclick="selectContactMethod('sms')">
+                                💬 SMS
+                            </div>
+                            <div class="contact-method" data-method="email" onclick="selectContactMethod('email')">
+                                📧 Email
+                            </div>
+                            <div class="contact-method" data-method="call" onclick="selectContactMethod('call')">
+                                📞 Call
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-yes" style="margin-top: 20px; width: 100%;" onclick="setupReminders()">
+                            🔔 Setup Reminders
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                <h3>✅ Setup Complete!</h3>
+                <p>Your AI health assistant is now active and reminders are set up.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fixed JavaScript for the health form
+        document.getElementById('healthForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('loadingSpinner');
+            const errorBox = document.getElementById('errorMessage');
+            const responseBox = document.getElementById('aiResponseContainer');
+            const responseContent = document.getElementById('aiResponseContent');
+
+            // Reset UI state
+            submitBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            errorBox.style.display = 'none';
+            responseBox.style.display = 'none';
+            responseContent.innerHTML = '';
+
+            // Collect form data
+            const formData = new FormData(this);
+            const data = {
+                name: formData.get('name'),
+                age: parseInt(formData.get('age')),
+                gender: formData.get('gender'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                familyContact: formData.get('familyContact') || '',
+                symptoms: formData.get('symptoms') || '',
+                medications: []
+            };
+
+            // Process medications
+            const medicineNames = formData.getAll('medicineName[]');
+            const dosages = formData.getAll('dosage[]');
+            const frequencies = formData.getAll('frequency[]');
+
+            for (let i = 0; i < medicineNames.length; i++) {
+                if (medicineNames[i].trim() !== "") {
+                    data.medications.push({
+                        name: medicineNames[i].trim(),
+                        dosage: dosages[i] ? dosages[i].trim() : '',
+                        frequency: frequencies[i] || ''
+                    });
+                }
+            }
+
+            try {
+                // Submit data to server
+                console.log('Submitting data:', data);
+                
+                const submitResponse = await fetch('/submit', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const submitResult = await submitResponse.json();
+                console.log('Submit response:', submitResult);
+
+                if (!submitResult.success) {
+                    throw new Error(submitResult.error || 'Failed to submit data');
+                }
+
+                // Show loading message
+                responseContent.innerHTML = `
+                    <div class="response-section">
+                        <h4>🤖 AI Analysis in Progress</h4>
+                        <p>Our AI is analyzing your health data. This may take 30-60 seconds...</p>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <div class="loading-spinner" style="display: inline-block; margin: 0;"></div>
+                        </div>
+                    </div>
+                `;
+                responseBox.style.display = 'block';
+
+                // Poll for AI response
+                let attempts = 0;
+                const maxAttempts = 20; // 40 seconds total (2 second intervals)
+                let aiData = null;
+
+                while (attempts < maxAttempts) {
+                    try {
+                        console.log(`Polling for AI response (attempt ${attempts + 1}/${maxAttempts})`);
+                        
+                        const aiResponse = await fetch('/get-ai-response', {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        
+                        if (aiResponse.ok) {
+                            const aiResult = await aiResponse.json();
+                            console.log('AI response received:', aiResult);
+                            
+                            // Check if we have meaningful data
+                            if (aiResult && Object.keys(aiResult).length > 0 && 
+                                aiResult.predicted_condition && 
+                                aiResult.predicted_condition !== "Analysis pending...") {
+                                aiData = aiResult;
+                                break;
+                            }
+                        }
+                    } catch (pollError) {
+                        console.warn('Polling error:', pollError);
+                    }
+                    
+                    // Wait 2 seconds before next attempt
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    attempts++;
+                }
+
+                if (!aiData) {
+                    throw new Error("AI analysis is taking longer than expected. Please try again or contact support.");
+                }
+
+                // Display the AI response
+                renderAIResponse(aiData);
+
+            } catch (error) {
+                console.error('Error:', error);
+                errorBox.textContent = error.message;
+                errorBox.style.display = 'block';
+                responseBox.style.display = 'none';
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        });
+
+        function renderAIResponse(aiData) {
+            const content = document.getElementById('aiResponseContent');
+            content.innerHTML = '';
+
+            // Predicted Condition
+            if (aiData.predicted_condition) {
+                const conditionDiv = document.createElement('div');
+                conditionDiv.className = 'response-section';
+                conditionDiv.innerHTML = `
+                    <h4>🩺 Health Analysis</h4>
+                    <p><strong>${aiData.predicted_condition}</strong></p>
+                `;
+                content.appendChild(conditionDiv);
+            }
+
+            // Medication Alerts
+            if (aiData.medication_alerts && aiData.medication_alerts.length > 0) {
+                const alertsDiv = document.createElement('div');
+                alertsDiv.className = 'response-section';
+                alertsDiv.innerHTML = `
+                    <h4>⚠️ Medication Alerts</h4>
+                    <ul>
+                        ${aiData.medication_alerts.map(alert => `<li>${alert}</li>`).join('')}
+                    </ul>
+                `;
+                content.appendChild(alertsDiv);
+            }
+
+            // Home Remedies
+            if (aiData.home_remedies && aiData.home_remedies.length > 0) {
+                const remediesDiv = document.createElement('div');
+                remediesDiv.className = 'response-section';
+                remediesDiv.innerHTML = `
+                    <h4>🏠 Home Remedies</h4>
+                    <ul>
+                        ${aiData.home_remedies.map(remedy => `<li>${remedy}</li>`).join('')}
+                    </ul>
+                `;
+                content.appendChild(remediesDiv);
+            }
+
+            // Diet Plan
+            if (aiData.diet_plan && aiData.diet_plan.length > 0) {
+                const dietDiv = document.createElement('div');
+                dietDiv.className = 'response-section';
+                dietDiv.innerHTML = `
+                    <h4>🥗 Diet Recommendations</h4>
+                    <ul>
+                        ${aiData.diet_plan.map(tip => `<li>${tip}</li>`).join('')}
+                    </ul>
+                `;
+                content.appendChild(dietDiv);
+            }
+
+            // YouTube Videos
+            if (aiData.youtube_videos && aiData.youtube_videos.length > 0) {
+                const videosDiv = document.createElement('div');
+                videosDiv.className = 'response-section';
+                
+                let videosHTML = '<h4>📺 Helpful Videos</h4><div class="youtube-links">';
+                
+                aiData.youtube_videos.forEach(video => {
+                    if (typeof video === 'string') {
+                        // Handle simple string format
+                        const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(video)}`;
+                        videosHTML += `<a href="${searchUrl}" target="_blank" class="youtube-link">${video}</a>`;
+                    } else if (video.search_url && video.title) {
+                        // Handle object format
+                        videosHTML += `<a href="${video.search_url}" target="_blank" class="youtube-link">${video.title}</a>`;
+                    }
+                });
+                
+                videosHTML += '</div>';
+                videosDiv.innerHTML = videosHTML;
+                content.appendChild(videosDiv);
+            }
+
+            // Show success message
+            content.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Medicine management functions
+        function addMedicine() {
+            const container = document.getElementById('medicinesContainer');
+            const newMedicineDiv = document.createElement('div');
+            newMedicineDiv.className = 'medicine-input';
+            newMedicineDiv.innerHTML = `
+                <input type="text" name="medicineName[]" placeholder="Medicine name" required>
+                <input type="text" name="dosage[]" placeholder="Dosage (e.g., 500mg)">
+                <select name="frequency[]">
+                    <option value="">Frequency</option>
+                    <option value="Once daily">Once daily</option>
+                    <option value="Twice daily">Twice daily</option>
+                    <option value="Three times daily">Three times daily</option>
+                    <option value="As needed">As needed</option>
+                </select>
+                <button type="button" onclick="removeMedicine(this)">Remove</button>
+            `;
+            container.appendChild(newMedicineDiv);
+        }
+
+        function removeMedicine(button) {
+            const container = document.getElementById('medicinesContainer');
+            if (container.children.length > 1) {
+                button.parentElement.remove();
+            } else {
+                alert('At least one medicine entry is required.');
+            }
+        }
+
+        // Reminder system functions
+        let selectedFrequency = '';
+        let selectedContactMethod = '';
+
+        function showReminderSetup() {
+            document.getElementById('reminderSetup').style.display = 'block';
+        }
+
+        function declineReminders() {
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('successMessage').innerHTML = `
+                <h3>✅ Analysis Complete!</h3>
+                <p>Your AI health analysis is ready. Take care of your health!</p>
+            `;
+        }
+
+        function selectFrequency(frequency) {
+            selectedFrequency = frequency;
+            document.querySelectorAll('.frequency-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-freq="${frequency}"]`).classList.add('active');
+        }
+
+        function selectContactMethod(method) {
+            selectedContactMethod = method;
+            document.querySelectorAll('.contact-method').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+        }
+
+        function setupReminders() {
+            if (!selectedFrequency || !selectedContactMethod) {
+                alert('Please select both frequency and contact method.');
+                return;
+            }
+
+            // Here you would typically send the reminder preferences to your server
+            console.log('Setting up reminders:', {
+                frequency: selectedFrequency,
+                contactMethod: selectedContactMethod
+            });
+
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('successMessage').innerHTML = `
+                <h3>✅ Reminders Set Successfully!</h3>
+                <p>You'll receive ${selectedFrequency} reminders via ${selectedContactMethod}.</p>
+            `;
+        }
+    </script>
+</body>
+</html>
