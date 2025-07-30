@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 
 DATA_FILE = 'user_data.json'
 AI_RESPONSE_FILE = 'ai_recommendations.json'
-N8N_REMINDER_WEBHOOK = 'https://h12user.app.n8n.cloud/webhook-test/webhook-test/medical-analysis'
+N8N_REMINDER_WEBHOOK = 'https://h12user.app.n8n.cloud/webhook/webhook-test/medical-analysis'
 
 def initialize_data_files():
     for file in [DATA_FILE, AI_RESPONSE_FILE]:
