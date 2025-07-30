@@ -516,298 +516,270 @@
             </div>
         </div>
     </div>
+<script>
+    // Fixed JavaScript for the health form
+    document.getElementById('healthForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-    <script>
-        // Fixed JavaScript for the health form
-        document.getElementById('healthForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('loadingSpinner');
+        const errorBox = document.getElementById('errorMessage');
+        const responseBox = document.getElementById('aiResponseContainer');
+        const responseContent = document.getElementById('aiResponseContent');
 
-            const submitBtn = document.getElementById('submitBtn');
-            const spinner = document.getElementById('loadingSpinner');
-            const errorBox = document.getElementById('errorMessage');
-            const responseBox = document.getElementById('aiResponseContainer');
-            const responseContent = document.getElementById('aiResponseContent');
+        // Reset UI state
+        submitBtn.disabled = true;
+        spinner.style.display = 'inline-block';
+        errorBox.style.display = 'none';
+        responseBox.style.display = 'none';
+        responseContent.innerHTML = '';
 
-            // Reset UI state
-            submitBtn.disabled = true;
-            spinner.style.display = 'inline-block';
-            errorBox.style.display = 'none';
-            responseBox.style.display = 'none';
-            responseContent.innerHTML = '';
+        // Collect form data
+        const formData = new FormData(this);
+        const data = {
+            name: formData.get('name'),
+            age: parseInt(formData.get('age')),
+            gender: formData.get('gender'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            familyContact: formData.get('familyContact') || '',
+            symptoms: formData.get('symptoms') || '',
+            medications: []
+        };
 
-            // Collect form data
-            const formData = new FormData(this);
-            const data = {
-                name: formData.get('name'),
-                age: parseInt(formData.get('age')),
-                gender: formData.get('gender'),
-                email: formData.get('email'),
-                phone: formData.get('phone'),
-                familyContact: formData.get('familyContact') || '',
-                symptoms: formData.get('symptoms') || '',
-                medications: []
-            };
+        // Process medications
+        const medicineNames = formData.getAll('medicineName[]');
+        const dosages = formData.getAll('dosage[]');
+        const frequencies = formData.getAll('frequency[]');
 
-            // Process medications
-            const medicineNames = formData.getAll('medicineName[]');
-            const dosages = formData.getAll('dosage[]');
-            const frequencies = formData.getAll('frequency[]');
-
-            for (let i = 0; i < medicineNames.length; i++) {
-                if (medicineNames[i].trim() !== "") {
-                    data.medications.push({
-                        name: medicineNames[i].trim(),
-                        dosage: dosages[i] ? dosages[i].trim() : '',
-                        frequency: frequencies[i] || ''
-                    });
-                }
-            }
-
-            try {
-                // Submit data to server
-                console.log('Submitting data:', data);
-                
-                const submitResponse = await fetch('/submit', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(data)
+        for (let i = 0; i < medicineNames.length; i++) {
+            if (medicineNames[i].trim() !== "") {
+                data.medications.push({
+                    name: medicineNames[i].trim(),
+                    dosage: dosages[i] ? dosages[i].trim() : '',
+                    frequency: frequencies[i] || ''
                 });
-
-                const submitResult = await submitResponse.json();
-                console.log('Submit response:', submitResult);
-
-                if (!submitResult.success) {
-                    throw new Error(submitResult.error || 'Failed to submit data');
-                }
-
-                // Show loading message
-                responseContent.innerHTML = `
-                    <div class="response-section">
-                        <h4>🤖 AI Analysis in Progress</h4>
-                        <p>Our AI is analyzing your health data. This may take 30-60 seconds...</p>
-                        <div style="text-align: center; margin: 20px 0;">
-                            <div class="loading-spinner" style="display: inline-block; margin: 0;"></div>
-                        </div>
-                    </div>
-                `;
-                responseBox.style.display = 'block';
-
-                // Poll for AI response
-                let attempts = 0;
-                const maxAttempts = 20; // 40 seconds total (2 second intervals)
-                let aiData = null;
-
-                while (attempts < maxAttempts) {
-                    try {
-                        console.log(`Polling for AI response (attempt ${attempts + 1}/${maxAttempts})`);
-                        
-                        const aiResponse = await fetch('/get-ai-response', {
-                            headers: { 'Accept': 'application/json' }
-                        });
-                        
-                        if (aiResponse.ok) {
-                            const aiResult = await aiResponse.json();
-                            console.log('AI response received:', aiResult);
-                            
-                            // Check if we have meaningful data
-                            if (aiResult && Object.keys(aiResult).length > 0 && 
-                                aiResult.predicted_condition && 
-                                aiResult.predicted_condition !== "Analysis pending...") {
-                                aiData = aiResult;
-                                break;
-                            }
-                        }
-                    } catch (pollError) {
-                        console.warn('Polling error:', pollError);
-                    }
-                    
-                    // Wait 2 seconds before next attempt
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    attempts++;
-                }
-
-                if (!aiData) {
-                    throw new Error("AI analysis is taking longer than expected. Please try again or contact support.");
-                }
-
-                // Display the AI response
-                renderAIResponse(aiData);
-
-            } catch (error) {
-                console.error('Error:', error);
-                errorBox.textContent = error.message;
-                errorBox.style.display = 'block';
-                responseBox.style.display = 'none';
-            } finally {
-                // Re-enable submit button
-                submitBtn.disabled = false;
-                spinner.style.display = 'none';
             }
+        }
+
+        try {
+            console.log('Submitting data:', data);
+            const submitResponse = await fetch('https://sample-hackz.onrender.com/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const submitResult = await submitResponse.json();
+            console.log('Submit response:', submitResult);
+
+            if (!submitResult.success) {
+                throw new Error(submitResult.error || 'Failed to submit data');
+            }
+
+            responseContent.innerHTML = `
+                <div class="response-section">
+                    <h4>🤖 AI Analysis in Progress</h4>
+                    <p>Our AI is analyzing your health data. This may take 30-60 seconds...</p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div class="loading-spinner" style="display: inline-block; margin: 0;"></div>
+                    </div>
+                </div>
+            `;
+            responseBox.style.display = 'block';
+
+            // Polling logic
+            let attempts = 0;
+            const maxAttempts = 20;
+            let aiData = null;
+
+            while (attempts < maxAttempts) {
+                try {
+                    console.log(`Polling for AI response (attempt ${attempts + 1}/${maxAttempts})`);
+
+                    const aiResponse = await fetch('https://sample-hackz.onrender.com/get-ai-response', {
+                        headers: { 'Accept': 'application/json' }
+                    });
+
+                    if (aiResponse.ok) {
+                        const aiResult = await aiResponse.json();
+                        console.log('AI response received:', aiResult);
+
+                        if (aiResult && Object.keys(aiResult).length > 0 &&
+                            aiResult.predicted_condition &&
+                            aiResult.predicted_condition !== "Analysis pending...") {
+                            aiData = aiResult;
+                            break;
+                        }
+                    }
+                } catch (pollError) {
+                    console.warn('Polling error:', pollError);
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                attempts++;
+            }
+
+            if (!aiData) {
+                throw new Error("AI analysis is taking longer than expected. Please try again or contact support.");
+            }
+
+            renderAIResponse(aiData);
+
+        } catch (error) {
+            console.error('Error:', error);
+            errorBox.textContent = error.message;
+            errorBox.style.display = 'block';
+            responseBox.style.display = 'none';
+        } finally {
+            submitBtn.disabled = false;
+            spinner.style.display = 'none';
+        }
+    });
+
+    function renderAIResponse(aiData) {
+        const content = document.getElementById('aiResponseContent');
+        content.innerHTML = '';
+
+        if (aiData.predicted_condition) {
+            const conditionDiv = document.createElement('div');
+            conditionDiv.className = 'response-section';
+            conditionDiv.innerHTML = `
+                <h4>🩺 Health Analysis</h4>
+                <p><strong>${aiData.predicted_condition}</strong></p>
+            `;
+            content.appendChild(conditionDiv);
+        }
+
+        if (aiData.medication_alerts?.length > 0) {
+            const alertsDiv = document.createElement('div');
+            alertsDiv.className = 'response-section';
+            alertsDiv.innerHTML = `
+                <h4>⚠️ Medication Alerts</h4>
+                <ul>${aiData.medication_alerts.map(alert => `<li>${alert}</li>`).join('')}</ul>
+            `;
+            content.appendChild(alertsDiv);
+        }
+
+        if (aiData.home_remedies?.length > 0) {
+            const remediesDiv = document.createElement('div');
+            remediesDiv.className = 'response-section';
+            remediesDiv.innerHTML = `
+                <h4>🏠 Home Remedies</h4>
+                <ul>${aiData.home_remedies.map(remedy => `<li>${remedy}</li>`).join('')}</ul>
+            `;
+            content.appendChild(remediesDiv);
+        }
+
+        if (aiData.diet_plan?.length > 0) {
+            const dietDiv = document.createElement('div');
+            dietDiv.className = 'response-section';
+            dietDiv.innerHTML = `
+                <h4>🥗 Diet Recommendations</h4>
+                <ul>${aiData.diet_plan.map(tip => `<li>${tip}</li>`).join('')}</ul>
+            `;
+            content.appendChild(dietDiv);
+        }
+
+        if (aiData.youtube_videos?.length > 0) {
+            const videosDiv = document.createElement('div');
+            videosDiv.className = 'response-section';
+            let videosHTML = '<h4>📺 Helpful Videos</h4><div class="youtube-links">';
+            aiData.youtube_videos.forEach(video => {
+                if (typeof video === 'string') {
+                    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(video)}`;
+                    videosHTML += `<a href="${searchUrl}" target="_blank" class="youtube-link">${video}</a>`;
+                } else if (video.search_url && video.title) {
+                    videosHTML += `<a href="${video.search_url}" target="_blank" class="youtube-link">${video.title}</a>`;
+                }
+            });
+            videosHTML += '</div>';
+            videosDiv.innerHTML = videosHTML;
+            content.appendChild(videosDiv);
+        }
+
+        content.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Medicine management
+    function addMedicine() {
+        const container = document.getElementById('medicinesContainer');
+        const newMedicineDiv = document.createElement('div');
+        newMedicineDiv.className = 'medicine-input';
+        newMedicineDiv.innerHTML = `
+            <input type="text" name="medicineName[]" placeholder="Medicine name" required>
+            <input type="text" name="dosage[]" placeholder="Dosage (e.g., 500mg)">
+            <select name="frequency[]">
+                <option value="">Frequency</option>
+                <option value="Once daily">Once daily</option>
+                <option value="Twice daily">Twice daily</option>
+                <option value="Three times daily">Three times daily</option>
+                <option value="As needed">As needed</option>
+            </select>
+            <button type="button" onclick="removeMedicine(this)">Remove</button>
+        `;
+        container.appendChild(newMedicineDiv);
+    }
+
+    function removeMedicine(button) {
+        const container = document.getElementById('medicinesContainer');
+        if (container.children.length > 1) {
+            button.parentElement.remove();
+        } else {
+            alert('At least one medicine entry is required.');
+        }
+    }
+
+    // Reminder system
+    let selectedFrequency = '';
+    let selectedContactMethod = '';
+
+    function showReminderSetup() {
+        document.getElementById('reminderSetup').style.display = 'block';
+    }
+
+    function declineReminders() {
+        document.getElementById('successMessage').style.display = 'block';
+        document.getElementById('successMessage').innerHTML = `
+            <h3>✅ Analysis Complete!</h3>
+            <p>Your AI health analysis is ready. Take care of your health!</p>
+        `;
+    }
+
+    function selectFrequency(frequency) {
+        selectedFrequency = frequency;
+        document.querySelectorAll('.frequency-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-freq="${frequency}"]`).classList.add('active');
+    }
+
+    function selectContactMethod(method) {
+        selectedContactMethod = method;
+        document.querySelectorAll('.contact-method').forEach(btn => btn.classList.remove('selected'));
+        document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+    }
+
+    function setupReminders() {
+        if (!selectedFrequency || !selectedContactMethod) {
+            alert('Please select both frequency and contact method.');
+            return;
+        }
+
+        console.log('Setting up reminders:', {
+            frequency: selectedFrequency,
+            contactMethod: selectedContactMethod
         });
 
-        function renderAIResponse(aiData) {
-            const content = document.getElementById('aiResponseContent');
-            content.innerHTML = '';
+        document.getElementById('successMessage').style.display = 'block';
+        document.getElementById('successMessage').innerHTML = `
+            <h3>✅ Reminders Set Successfully!</h3>
+            <p>You'll receive ${selectedFrequency} reminders via ${selectedContactMethod}.</p>
+        `;
+    }
+</script>
 
-            // Predicted Condition
-            if (aiData.predicted_condition) {
-                const conditionDiv = document.createElement('div');
-                conditionDiv.className = 'response-section';
-                conditionDiv.innerHTML = `
-                    <h4>🩺 Health Analysis</h4>
-                    <p><strong>${aiData.predicted_condition}</strong></p>
-                `;
-                content.appendChild(conditionDiv);
-            }
-
-            // Medication Alerts
-            if (aiData.medication_alerts && aiData.medication_alerts.length > 0) {
-                const alertsDiv = document.createElement('div');
-                alertsDiv.className = 'response-section';
-                alertsDiv.innerHTML = `
-                    <h4>⚠️ Medication Alerts</h4>
-                    <ul>
-                        ${aiData.medication_alerts.map(alert => `<li>${alert}</li>`).join('')}
-                    </ul>
-                `;
-                content.appendChild(alertsDiv);
-            }
-
-            // Home Remedies
-            if (aiData.home_remedies && aiData.home_remedies.length > 0) {
-                const remediesDiv = document.createElement('div');
-                remediesDiv.className = 'response-section';
-                remediesDiv.innerHTML = `
-                    <h4>🏠 Home Remedies</h4>
-                    <ul>
-                        ${aiData.home_remedies.map(remedy => `<li>${remedy}</li>`).join('')}
-                    </ul>
-                `;
-                content.appendChild(remediesDiv);
-            }
-
-            // Diet Plan
-            if (aiData.diet_plan && aiData.diet_plan.length > 0) {
-                const dietDiv = document.createElement('div');
-                dietDiv.className = 'response-section';
-                dietDiv.innerHTML = `
-                    <h4>🥗 Diet Recommendations</h4>
-                    <ul>
-                        ${aiData.diet_plan.map(tip => `<li>${tip}</li>`).join('')}
-                    </ul>
-                `;
-                content.appendChild(dietDiv);
-            }
-
-            // YouTube Videos
-            if (aiData.youtube_videos && aiData.youtube_videos.length > 0) {
-                const videosDiv = document.createElement('div');
-                videosDiv.className = 'response-section';
-                
-                let videosHTML = '<h4>📺 Helpful Videos</h4><div class="youtube-links">';
-                
-                aiData.youtube_videos.forEach(video => {
-                    if (typeof video === 'string') {
-                        // Handle simple string format
-                        const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(video)}`;
-                        videosHTML += `<a href="${searchUrl}" target="_blank" class="youtube-link">${video}</a>`;
-                    } else if (video.search_url && video.title) {
-                        // Handle object format
-                        videosHTML += `<a href="${video.search_url}" target="_blank" class="youtube-link">${video.title}</a>`;
-                    }
-                });
-                
-                videosHTML += '</div>';
-                videosDiv.innerHTML = videosHTML;
-                content.appendChild(videosDiv);
-            }
-
-            // Show success message
-            content.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Medicine management functions
-        function addMedicine() {
-            const container = document.getElementById('medicinesContainer');
-            const newMedicineDiv = document.createElement('div');
-            newMedicineDiv.className = 'medicine-input';
-            newMedicineDiv.innerHTML = `
-                <input type="text" name="medicineName[]" placeholder="Medicine name" required>
-                <input type="text" name="dosage[]" placeholder="Dosage (e.g., 500mg)">
-                <select name="frequency[]">
-                    <option value="">Frequency</option>
-                    <option value="Once daily">Once daily</option>
-                    <option value="Twice daily">Twice daily</option>
-                    <option value="Three times daily">Three times daily</option>
-                    <option value="As needed">As needed</option>
-                </select>
-                <button type="button" onclick="removeMedicine(this)">Remove</button>
-            `;
-            container.appendChild(newMedicineDiv);
-        }
-
-        function removeMedicine(button) {
-            const container = document.getElementById('medicinesContainer');
-            if (container.children.length > 1) {
-                button.parentElement.remove();
-            } else {
-                alert('At least one medicine entry is required.');
-            }
-        }
-
-        // Reminder system functions
-        let selectedFrequency = '';
-        let selectedContactMethod = '';
-
-        function showReminderSetup() {
-            document.getElementById('reminderSetup').style.display = 'block';
-        }
-
-        function declineReminders() {
-            document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('successMessage').innerHTML = `
-                <h3>✅ Analysis Complete!</h3>
-                <p>Your AI health analysis is ready. Take care of your health!</p>
-            `;
-        }
-
-        function selectFrequency(frequency) {
-            selectedFrequency = frequency;
-            document.querySelectorAll('.frequency-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[data-freq="${frequency}"]`).classList.add('active');
-        }
-
-        function selectContactMethod(method) {
-            selectedContactMethod = method;
-            document.querySelectorAll('.contact-method').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            document.querySelector(`[data-method="${method}"]`).classList.add('selected');
-        }
-
-        function setupReminders() {
-            if (!selectedFrequency || !selectedContactMethod) {
-                alert('Please select both frequency and contact method.');
-                return;
-            }
-
-            // Here you would typically send the reminder preferences to your server
-            console.log('Setting up reminders:', {
-                frequency: selectedFrequency,
-                contactMethod: selectedContactMethod
-            });
-
-            document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('successMessage').innerHTML = `
-                <h3>✅ Reminders Set Successfully!</h3>
-                <p>You'll receive ${selectedFrequency} reminders via ${selectedContactMethod}.</p>
-            `;
-        }
-    </script>
+  
 </body>
 </html>
